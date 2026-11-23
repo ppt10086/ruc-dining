@@ -717,8 +717,17 @@ function buildMenu(wrap, st, cname, fname){
         const card = el('div','dCard'+(perma?'':' rot'));
         if (img){
           const im = el('img','thumb');
-          im.src = img; im.loading='lazy'; im.alt=nm;
-          im.onerror = ()=>{ const ph=el('div','noimg','🍽'); im.replaceWith(ph); };
+          im.alt = nm;
+          im.onerror = function(){
+            // 二次尝试：加时间戳绕过可能的缓存异常
+            if (!this.dataset.retried){
+              this.dataset.retried = '1';
+              this.src = img + '?r=1';
+              return;
+            }
+            this.replaceWith(el('div','noimg','🍽'));
+          };
+          im.src = img;
           card.appendChild(im);
         } else {
           card.appendChild(el('div','noimg','🍽'));
