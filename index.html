@@ -544,7 +544,7 @@ img { display: block; width: 100%; }
 }
 
 @media (min-width: 761px) {
-  .live-catalog .counter-panel { max-width: calc(100% - 900rem - 4px); }
+  .live-catalog .counter-panel { max-width: calc(100% - 790rem - 4px); }
 }
 
 .ruc-unit { margin-right: auto; align-self: center; font-size: 10rem; color: var(--muted); white-space: nowrap; }
@@ -650,7 +650,7 @@ img { display: block; width: 100%; }
 }
 .ruc-header-campus::before { width: 125.902%; left: -12.705%; top: -314.58%; }
 .live-catalog #dashboard { --ruc-panel-space: 0rem; }
-.live-catalog #dashboard.ruc-focused { --ruc-panel-space: calc(100% - 900rem); }
+.live-catalog #dashboard.ruc-focused { --ruc-panel-space: calc(100% - 790rem); }
 .live-catalog #stage[data-frame="LIVE"] { overflow-x: clip; }
 .live-catalog .ruc-plan-crop {
   clip-path: inset(0 var(--ruc-panel-space) 0 0);
@@ -700,7 +700,7 @@ img { display: block; width: 100%; }
   .live-catalog .ruc-canteens { top: 16rem; bottom: auto; left: 48%; transform: translateX(-50%); transition: left .56s cubic-bezier(.65,0,.35,1); }
   .live-catalog .ruc-focused .ruc-canteens { left: 43%; }
   .live-catalog .counter-panel {
-    top: 20rem; bottom: 15rem; min-height: 0;
+    top: 20rem; bottom: 15rem; left: 790rem; width: 562rem; min-height: 0;
     display: flex; flex-direction: column;
   }
   .live-catalog .counter-panel > :not(.panel-body) { flex: none; }
@@ -812,6 +812,32 @@ img { display: block; width: 100%; }
 #ruc-ai-search:disabled { opacity: .55; cursor: default; }
 .ruc-ai-status { margin-block: 5rem 0; color: var(--muted); }
 .ruc-ai-status:empty { display: none; }
+
+.ruc-guide { max-width: 780px; margin-inline: auto; width: 100%; }
+.ruc-guide .search-line { gap: 9px; margin: 0; }
+.ruc-guide .search-line input { min-width: 0; }
+.ruc-guide .search-line .pill { flex: none; }
+#ruc-guide-result:not(:empty) { margin-top: 16px; }
+.ruc-guide-answer-text { white-space: pre-line; line-height: 1.65; }
+.ruc-guide-cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(135px,100%),1fr)); gap: 10px; }
+.ruc-guide-card { display: grid; align-content: start; color: var(--red); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--paper); text-decoration: none; }
+.ruc-guide-card:is(:hover,:focus-visible) { border-color: var(--red); }
+.ruc-guide-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+.ruc-guide-card span { padding: 9px; }
+.ruc-guide-card small { display: block; color: var(--muted); }
+@media (min-width: 761px) {
+  .live-catalog .ruc-focused .floor-selector { top: 75rem; }
+  .live-catalog .floor-selector { transition-property: top, right; }
+  .live-catalog .ruc-menu-scroll .menu-lines { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .live-catalog .ruc-menu-scroll.is-compact .menu-lines { grid-template-columns: repeat(5,minmax(0,1fr)); }
+  .ruc-menu-scroll .ruc-dish:not(.ruc-compact-dish) { grid-template-columns: 48rem minmax(0,1fr) auto; gap: 5rem; padding-inline: 5rem; }
+  .ruc-menu-scroll .ruc-dish:not(.ruc-compact-dish) :is(img,.ruc-no-photo) { width: 48rem; }
+  .ruc-menu-scroll .ruc-dish:not(.ruc-compact-dish) .ruc-macros { white-space: normal; line-height: 1.25; }
+  .ruc-menu-scroll .ruc-dish:not(.ruc-compact-dish) .price { font-size: 14rem; }
+}
+@media (max-width: 760px) {
+  .ruc-guide .search-line { min-height: 44px; padding-inline: 9px; }
+}
 
 </style>
 <!--
@@ -2436,70 +2462,9 @@ function switchCanteen(name) {
 
 "use strict";
 
-function smartRequest(input) {
-  let text = input.normalize("NFKC").toLowerCase().trim();
-  const canteen = /(?:丰园|禾园|嘉园|嘉源)/.exec(text)?.[0]?.replace("嘉源","嘉园");
-  const meal = DINING_MEALS.find(name=>text.includes(name));
-  const floor = /(?:[g一二三四1234][层楼]|[1-4]f)/i.exec(text)?.[0];
-  const lowEnergy = /减脂|低卡|低热量|控卡/.test(text);
-  const highProtein = /增肌|高蛋白/.test(text);
-  const lowFat = /低脂|少油/.test(text);
-  const budget = /(?:不超过|最多|低于|小于|预算\s*)\s*(\d+(?:\.\d+)?)\s*(?:块钱?|元)?|(\d+(?:\.\d+)?)\s*(?:块钱?|元)\s*(?:以下|以内)/.exec(text);
-  const exclude = [...text.matchAll(/(?:不吃|不要|避开|不含|忌)([^ ，。？、,?]+)/g)].map(([,word])=>word.replace(/(?:的菜|的|去哪|哪里|去哪里|怎么找).*$/,"")).filter(Boolean);
-  text = text.replace(/(?:不吃|不要|避开|不含|忌)[^ ，。？、,?]+/g," ");
-  if (budget) text = text.replace(budget[0]," ");
-  if (floor) text = text.replace(floor," ");
-  text = text.replace(/(?:丰园|禾园|嘉园|嘉源)(?:食堂)?|早餐|午餐|下午茶|晚餐|夜宵/g," ")
-    .replace(/减脂餐?|低卡(?:餐|菜)?|低热量(?:餐|菜)?|控卡|增肌餐?|高蛋白|低脂餐?|少油/g," ")
-    .replace(/去哪个(?:食堂|档口|餐口|窗口)|哪个(?:食堂|档口|餐口|窗口)有|想吃|只能吃|想找|帮我找|我想|我能|我|想要|哪里(?:有|能吃到|可以吃到)?|哪儿(?:有|能吃到)?|在哪(?:里|儿)?|在?什么位置|什么地方|去哪里|去哪(?:里)?|从哪|有卖|能吃到|要吃|找一下|(?:什么|哪些)菜|怎么走|怎么找|(?:的)?(?:菜品|餐品|餐口|档口|窗口)|(?:的菜|的餐)(?=[？?\s]|$)|[吗呢？?！!，。、,]/g," ")
-    .replace(/^\s*(?:吃|找|有)\s*/, "").trim();
-  const terms = text.split(/\s+/).filter(Boolean);
-  const floorName = floor ? catalogFloor(floor.replace("楼","层")) : "";
-  const limit = budget ? Math.round(Number(budget[1] || budget[2])*100) : null;
-  const notes = [
-    lowEnergy && "热量 ≤ 200 kcal／100 g",
-    highProtein && "蛋白质 ≥ 15 g／100 g",
-    lowFat && "脂肪 ≤ 10 g／100 g",
-    limit!==null && "价格 "+(/低于|小于/.test(budget[0])?"＜":"≤")+" "+yuan(limit),
-    exclude.length>0 && "按名称排除「"+exclude.join("、")+"」。配料需现场确认",
-  ].filter(Boolean);
-  return {canteen: canteen ? canteen+"食堂" : "", meal, floor:floorName, terms, exclude, lowEnergy, highProtein, lowFat,
-    limit, strictBudget:budget && /低于|小于/.test(budget[0]), notes};
-}
-
-function smartScore(request,dish) {
-  if (request.canteen && dish.stall.canteen!==request.canteen ||
-      request.meal && dish.slot.meal!==request.meal ||
-      request.floor && dish.stall.floor!==request.floor ||
-      request.limit!==null && (dish.price===null || (request.strictBudget ? dish.price>=request.limit : dish.price>request.limit)) ||
-      request.lowEnergy && (dish.kcal===null || dish.kcal>200) ||
-      request.highProtein && (dish.protein===null || dish.protein<15) ||
-      request.lowFat && (dish.fat===null || dish.fat>10)) return -1;
-
-  const name = dish.name.toLowerCase();
-  const place = [dish.stall.name,dish.stall.tag,dish.slot.type].join(" ").toLowerCase();
-  const aliases = {"西餐":["西式"],"轻食":["沙拉","轻食"],"牛肉":["牛腩","牛柳","肥牛","牛排"],"鸡肉":["鸡胸","鸡腿","鸡丁","鸡排","鸡块","鸡丝"]};
-  const variants = (term)=>[term,...(aliases[term]||[])];
-  if (request.exclude.some(term=>variants(term).some(value=>(name+" "+place).includes(value))) ||
-      request.exclude.includes("辣") && /麻婆|水煮|剁椒|红油/.test(name)) return -1;
-  let score = 0;
-  for (const term of request.terms) {
-    if (name===term) score += 9;
-    else if (variants(term).some(value=>name.includes(value))) score += 4;
-    else if (variants(term).some(value=>place.includes(value))) score += 2;
-    else return -1;
-  }
-  return score;
-}
-
-</script>
-<script>
-
-"use strict";
-
 const actualRoutes = new Map([[1,"menu"],[811,"guide"],[831,"nutrition"],[851,"about"]]);
 const actualPage = () => {
-  const hash = location.hash.slice(1);
+  const hash = location.hash.slice(1).split("?")[0];
   if (/^S\d{1,4}$/i.test(hash)) return "";
   if (hash==="search") return "guide";
   if (hash==="news") return "about";
@@ -2508,7 +2473,8 @@ const actualPage = () => {
 const publicPhotos = !document.querySelector('script[src="menu_data.js"]');
 const intentEndpoint = publicPhotos ? RUC_AI_ENDPOINT : "/api/search-intent";
 let intentRequest;
-let smartRewrite = "";
+let guideResult = "";
+let appliedGuideLink = "";
 const imagePath = (filename) => filename ? (publicPhotos ? "images/" : "images/") + encodeURIComponent(filename) : "";
 const asText = (value) => encode(value ?? "");
 const realButton = (label, action, value, selected = false, extra = "") => pill(asText(label), "ruc-" + action, value, selected, extra);
@@ -2770,22 +2736,8 @@ function indexTools() {
     realSelect("餐次","filterMeal",indexMeals(),actual.filterMeal);
 }
 
-function resultCards(favoritesOnly, smart = false) {
-  const query = smart ? actual.smartQuery : actual.query;
-  const request = smart ? smartRequest(query) : null;
-  if (request && smartRewrite) {
-    const rewrite = smartRequest(smartRewrite);
-    for (const key of ["canteen","meal","floor","lowEnergy","highProtein","lowFat"]) {
-      if (!request[key] && rewrite[key]) request[key]=rewrite[key];
-    }
-    if (request.limit===null && rewrite.limit!==null) {
-      request.limit=rewrite.limit;
-      request.strictBudget=rewrite.strictBudget;
-    }
-    if (rewrite.terms.length) request.terms=rewrite.terms;
-    request.exclude=[...new Set([...request.exclude,...rewrite.exclude])];
-    request.notes=[...new Set([...request.notes,...rewrite.notes])];
-  }
+function resultCards(favoritesOnly) {
+  const query = actual.query;
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const candidates = indexDishes().filter(dish=>
     (!favoritesOnly || actual.favorite.has(dish.favoriteId)) &&
@@ -2798,10 +2750,7 @@ function resultCards(favoritesOnly, smart = false) {
     valueGroup(dish.protein,actual.filterProtein,10,20) &&
     valueGroup(dish.carbs,actual.filterCarbs,20,40) &&
     valueGroup(dish.fat,actual.filterFat,10,20));
-  let matches = smart ? candidates.map(dish=>({dish,score:smartScore(request,dish)}))
-    .filter(item=>item.score>=0)
-    .sort((a,b)=>b.score-a.score || (request.lowEnergy ? a.dish.kcal-b.dish.kcal : request.highProtein ? b.dish.protein-a.dish.protein : 0))
-    .map(item=>item.dish) : candidates.filter(dish=>
+  let matches = candidates.filter(dish=>
     tokens.every(word=>[dish.name,dish.stall.name,dish.stall.canteen,dish.stall.tag].join(" ").toLowerCase().includes(word)));
   if (favoritesOnly) matches = [...new Map(matches.map(dish=>[dish.favoriteId,dish])).values()];
   if (actual.sort==="protein") matches.sort((a,b)=>(b.protein??-Infinity)-(a.protein??-Infinity));
@@ -2809,62 +2758,118 @@ function resultCards(favoritesOnly, smart = false) {
   const pages = Math.ceil(matches.length/24);
   actual.searchPage = Math.min(actual.searchPage,Math.max(0,pages-1));
   const batch = matches.slice(actual.searchPage*24,(actual.searchPage+1)*24);
-  const notes = request?.notes.length ? '<p class="ruc-smart-rule">' + asText(request.notes.join(" · ")) + '</p>' : "";
   const rows = batch.map(dish=>{
     const card = '<button type="button" class="search-result" data-real="dish" data-value="' + dish.id + '">' +
       '<span class="search-thumb">' + realImage(dish) + '</span><span><strong>' + asText(dish.name) + '</strong><small>' +
       asText(stallLocation(dish.stall) + " · " + dish.slot.meal) + '</small><small>' +
       yuan(dish.price) + ' · ' + unit(dish.kcal," kcal/100 g") + '</small></span></button>';
-    return smart ? '<article class="ruc-smart-card">' + card + realButton("地图定位","locate",dish.id) + '</article>' : card;
+    return card;
   }).join("");
   const noResults = '<div class="no-results"><h3>' + (favoritesOnly ? "没有符合条件的收藏菜品" : "未找到匹配的菜品") +
     '</h3><p>可调整关键词、食堂、日期或餐次。</p></div>';
-  const stalls = smart && request.terms.length && !request.notes.length ? [...realData.stalls.values()].filter(stall=>
-    (!actual.filterCanteen || stall.canteen===actual.filterCanteen) &&
-    (!request.canteen || stall.canteen===request.canteen) && (!request.floor || stall.floor===request.floor) &&
-    request.terms.every(term=>[stall.name,stall.tag].some(name=>name.toLowerCase().includes(term)))) : [];
-  const locations = stalls.length ? '<div class="ruc-smart-stalls"><strong>匹配档口</strong>' +
-    stalls.map(stall=>realButton(stallLocation(stall)+(stall.placeholder?"（占位）":""),"locate",stall.id)).join("") + '</div>' : "";
-  return notes + locations + '<p class="ruc-result-count" role="status">' + batch.length + ' / ' + matches.length +
+  return '<p class="ruc-result-count" role="status">' + batch.length + ' / ' + matches.length +
     ' 道菜 · 营养按 100 g 标注</p><div class="search-grid">' + (rows || noResults) + '</div>' +
     listPager("result-page",actual.searchPage,pages,matches.length);
 }
 
-async function refineSearch() {
+function guideLink(stall, dish) {
+  const address = new URLSearchParams({stall:stall.id});
+  if (dish) {
+    address.set("name",dish.name);
+    address.set("date",dish.date);
+    address.set("meal",dish.slot.meal);
+  }
+  return "#menu?" + address;
+}
+
+function renderGuideAnswer(result) {
+  const mode = result.mode;
+  const items = (Array.isArray(result.items) ? result.items : []).slice(0,4).flatMap(item=>{
+    const stall = realData.stalls.get(item.stall);
+    if (!stall) return [];
+    const dish = item.name ? realData.daily(stall,item.date,item.meal).find(dish=>dish.name===item.name) : null;
+    if (item.name && !dish) return [];
+    return [{stall,dish}];
+  });
+  const text = mode!=="photos" && result.text ? '<p class="ruc-guide-answer-text">' + asText(result.text) + '</p>' : "";
+  const cards = items.map(({stall,dish})=>{
+    if (mode==="photos" && !dish?.image) return "";
+    if (mode==="text") return "";
+    const label = dish ? dish.name : miniStall(stall);
+    const image = ["photos","mixed"].includes(mode) && dish?.image ? realImage(dish) : "";
+    const caption = mode==="photos" ? "" : '<span><strong>' + asText(label) + '</strong><small>' +
+      asText(stallLocation(stall) + (dish ? " · " + shortDate(dish.date) + " · " + dish.slot.meal + " · " + yuan(dish.price) : "")) +
+      (mode==="mixed" && dish?.kcal!=null ? '<br>' + asText(unit(dish.kcal," kcal／100 g")) : "") + '</small></span>';
+    return '<a class="ruc-guide-card" href="' + asText(guideLink(stall,dish)) + '" aria-label="' +
+      asText(label + "，在地图查看") + '">' + image + caption + '</a>';
+  }).join("");
+  return text + (cards ? '<div class="ruc-guide-cards">' + cards + '</div>' : "") ||
+    '<p>当前菜单里没有可显示的结果，换个菜名试试吧。</p>';
+}
+
+function applyGuideLink() {
+  const hash = location.hash;
+  if (!hash.startsWith("#menu?")) {
+    appliedGuideLink = "";
+    return null;
+  }
+  if (appliedGuideLink===hash) return null;
+  appliedGuideLink = hash;
+  const params = new URLSearchParams(hash.slice(6));
+  const stall = realData.stalls.get(params.get("stall"));
+  if (!stall) return null;
+  setActualCanteen(stall.canteen);
+  actual.stall = stall.id;
+  actual.floor = stall.floor;
+  actual.tab = 0;
+  const date = params.get("date");
+  const meal = params.get("meal");
+  if (realData.dates.includes(date) && DINING_MEALS.includes(meal)) {
+    actual.date = date;
+    actual.meal = meal;
+  }
+  return realData.daily(stall,actual.date,actual.meal).find(dish=>dish.name===params.get("name"));
+}
+
+function actualGuide() {
+  return '<section class="ruc-guide"><form id="ruc-guide-form" class="search-line">' + icon("search") +
+    '<input type="search" id="ruc-query" maxlength="120" required autocomplete="off" aria-label="智能检索" ' +
+    'placeholder="我是人大食堂向导，想吃点什么？" value="' + asText(actual.smartQuery) + '">' +
+    '<button type="submit" class="pill filled">AI 检索</button></form>' +
+    '<div id="ruc-guide-result" aria-live="polite">' + guideResult + '</div></section>';
+}
+
+async function refineSearch(form) {
   const query = actual.smartQuery.trim();
-  if (!intentEndpoint || !query || intentRequest) return;
-  const status = $("#ruc-ai-status");
-  const run = $("#ruc-ai-search");
-  if (!status || !run) return;
+  if (!query || !intentEndpoint || intentRequest) return;
+  const output = $("#ruc-guide-result");
+  const button = form.querySelector("button");
   const request = new AbortController();
-  intentRequest=request;
-  const timeout = setTimeout(()=>request.abort(),11000);
-  status.textContent="正在理解检索词…";
-  run.disabled=true;
+  intentRequest = request;
+  const timeout = setTimeout(()=>request.abort(),33000);
+  button.disabled = true;
+  output.textContent = "正在查看本周菜单…";
   try {
     const response = await fetch(intentEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({q:query}),signal:request.signal});
     const result = await response.json();
-    if (actualPage()!=="guide" || actual.smartQuery.trim()!==query) return;
-    if (!result.ok || typeof result.q!=="string" || result.q.length>100) {
-      status.textContent=result.reason==="budget" ? "这条检索已使用站内匹配。" : "AI 暂不可用，已显示站内匹配。";
-      return;
-    }
-    smartRewrite=result.q;
-    actual.searchPage=0;
-    $("#ruc-results").innerHTML=resultCards(false,true);
-    status.textContent="已按检索意图匹配食堂菜单。";
+    const errors = {
+      budget:"这条问题有点长，试试只写菜名或一个条件吧。",
+      rate:"现在查询的人有点多，请稍后再试。",
+    };
+    if (result.ok) guideResult = renderGuideAnswer(result);
+    else guideResult = '<p>' + (errors[result.reason] || "食堂向导暂时无法连接，请稍后再试。") + '</p>';
   } catch {
-    if (actualPage()==="guide" && actual.smartQuery.trim()===query) status.textContent="AI 暂不可用，已显示站内匹配。";
+    guideResult = '<p>食堂向导暂时无法连接，请稍后再试。</p>';
   } finally {
     clearTimeout(timeout);
-    if (intentRequest===request) intentRequest=null;
-    const current = $("#ruc-ai-search");
-    if (current) current.disabled=Boolean(intentRequest) || !actual.smartQuery.trim();
+    intentRequest = null;
+    button.disabled = false;
+    if (form.isConnected) output.innerHTML = guideResult;
   }
 }
 
-function actualSearch(favoritesOnly, smart = false) {
+function actualSearch(favoritesOnly) {
   const scope = actual.filterCanteen ? [actual.filterCanteen] : [...realData.canteens.keys()];
   const levels = [...new Set(scope.flatMap((canteen)=>realData.floors(canteen)))];
   const tags = [...new Set([...realData.stalls.values()].filter(stall=>scope.includes(stall.canteen)).map(stall=>stall.tag))];
@@ -2882,21 +2887,13 @@ function actualSearch(favoritesOnly, smart = false) {
   const open = searchFilters.find(([,key])=>key===actual.activeFilter);
   const options = open ? '<div class="ruc-controls ruc-filter-options">' +
     realSelect(open[0],open[1],[["",open[1]==="sort"?"菜单顺序":"全部"],...choices[open[1]]],actual[open[1]]) + '</div>' : "";
-  const aiButton = smart && intentEndpoint ? '<button type="button" id="ruc-ai-search" class="pill filled" data-real="refine" '+
-    (actual.smartQuery.trim() && !intentRequest ? "" : "disabled") + '>AI 检索</button>' : "";
-  const aiStatus = aiButton ? '<p id="ruc-ai-status" class="ruc-ai-status" role="status"></p>' : "";
-  const title = smart ? "今天想去哪儿吃？" : favoritesOnly ? "筛选收藏菜单" : "搜索菜品或餐口";
-  const prompts = ["牛肉面在哪儿","嘉园西餐","想吃减脂餐去哪","午餐 10 元以内"];
-  const shortcut = smart ? '<div class="ruc-smart-prompts">' +
-    prompts.map(prompt=>realButton(prompt,"smart-prompt",prompt)).join("") + '</div>' : "";
-  return '<section class="search-pane in-flow ruc-search"><h3>' + title +
-    '</h3><div class="search-line">' + icon("search") + '<input type="search" id="ruc-query" autocomplete="off" aria-label="' +
-    (smart ? '智能检索' : '搜索菜品或档口') + '" placeholder="' + (smart ? '例如：丰园午餐想吃低卡菜，10 元以内' : '输入菜品、档口或菜系') +
-    '" value="' + asText(smart ? actual.smartQuery : actual.query) + '">' + aiButton + '</div>' + aiStatus + shortcut +
+  return '<section class="search-pane in-flow ruc-search"><h3>筛选收藏菜单</h3><div class="search-line">' +
+    icon("search") + '<input type="search" id="ruc-query" autocomplete="off" aria-label="筛选收藏" ' +
+    'placeholder="输入菜品、档口或菜系" value="' + asText(actual.query) + '"></div>' +
     '<div class="ruc-tools ruc-search-tools ruc-index-tools">' + indexTools() +
     ('<a href="' + (favoritesOnly ? "#guide" : "#favorites") + '" class="pill">' +
     (favoritesOnly ? "返回查询" : "我的收藏") + '</a>') + '</div>' + chips + options +
-    '<div id="ruc-results">' + resultCards(favoritesOnly,smart) + '</div></section>';
+    '<div id="ruc-results">' + resultCards(favoritesOnly) + '</div></section>';
 }
 
 function actualNutrition() {
@@ -2924,7 +2921,7 @@ function actualSubpage(route) {
   if (route==="favorites") {
     body = actualSearch(true);
   } else if (route==="guide") {
-    body = actualSearch(false,true);
+    body = actualGuide();
   } else if (route==="nutrition") {
     body = actualNutrition();
   } else {
@@ -2935,7 +2932,7 @@ function actualSubpage(route) {
     const rows = (items)=>'<dl class="ruc-about-rows">' + items.map(([label,text])=>
       '<div><dt>'+asText(label)+'</dt><dd>'+asText(text)+'</dd></div>').join("")+'</dl>';
     body = rows(facts) + '<section class="ruc-dining-news" aria-labelledby="dining-news"><h2 id="dining-news">就餐资讯</h2>' +
-      rows(news) + '</section>';
+      rows(news) + '</section><p><a href="#favorites" class="pill">我的收藏</a></p>';
   }
   return '<header class="page-head"><h1 id="page-title">' + heading + '</h1><p>人大 · 智慧食堂 / ' + heading +
     ' · ' + weekText() + '</p></header><div class="page-content">' + body + '</div>';
@@ -3008,6 +3005,7 @@ function renderActual({animation=false}={}) {
   dashboard.hidden = route!=="menu";
   subpage.hidden = route==="menu";
   subpage.classList.toggle("ruc-nutrition-page",route==="nutrition");
+  const linkedDish = applyGuideLink();
   if (route==="menu") {
     const open = Boolean(actualStall());
     dashboard.classList.toggle("ruc-focused",open);
@@ -3016,6 +3014,7 @@ function renderActual({animation=false}={}) {
     if (open) actualPanel();
     if (open!==wasOpen || changedRoute || !animation) presentActualPanel(open,animation && (!changedRoute || open));
     movePlan(actual.stall,animation && !changedRoute);
+    if (linkedDish) showActualDish(linkedDish);
   } else {
     presentActualPanel(false,false);
     subpage.innerHTML=actualSubpage(route);
@@ -3079,13 +3078,6 @@ function receiveRealClick(event, target) {
     actual.nutritionPage=Math.max(0,Number(value));
     subpage.innerHTML=actualSubpage("nutrition");
     $("#page-title").scrollIntoView({block:"nearest"});
-  } else if (key==="refine") {
-    refineSearch();
-  } else if (key==="smart-prompt") {
-    const input = $("#ruc-query");
-    input.value=value;
-    input.dispatchEvent(new Event("input",{bubbles:true}));
-    input.focus({preventScroll:true});
   } else if (key==="filter") {
     actual.activeFilter=actual.activeFilter===value?"":value;
     subpage.innerHTML=actualSubpage(actualPage());
@@ -3093,7 +3085,7 @@ function receiveRealClick(event, target) {
       ?.focus({preventScroll:true});
   } else if (key==="result-page") {
     actual.searchPage=Math.max(0,Number(value));
-    $("#ruc-results").innerHTML=resultCards(actualPage()==="favorites",actualPage()==="guide");
+    $("#ruc-results").innerHTML=resultCards(true);
     $("#ruc-query").scrollIntoView({block:"nearest"});
   } else {
     const dish=realData.dishes.get(value);
@@ -3161,25 +3153,21 @@ document.addEventListener("change",(event)=>{
   document.querySelector('select[data-ruc="'+field+'"]')?.focus({preventScroll:true});
 });
 document.addEventListener("input",(event)=>{
-  if(event.target.id!=="ruc-query") return;
-  const smart = actualPage()==="guide";
-  actual[smart?"smartQuery":"query"]=event.target.value;
-  if (smart) {
-    intentRequest?.abort();
-    intentRequest=null;
-    smartRewrite="";
-    if ($("#ruc-ai-search")) $("#ruc-ai-search").disabled=!actual.smartQuery.trim();
-    if ($("#ruc-ai-status")) $("#ruc-ai-status").textContent="";
-  }
-  actual.searchPage=0;
-  $("#ruc-results").innerHTML=resultCards(actualPage()==="favorites",smart);
-});
-document.addEventListener("keydown",(event)=>{
-  if (event.key==="Enter" && !event.isComposing && event.target.id==="ruc-query" && actualPage()==="guide" && intentEndpoint) {
-    event.preventDefault();
-    refineSearch();
+  if (event.target.id!=="ruc-query") return;
+  if (actualPage()==="guide") {
+    actual.smartQuery = event.target.value;
     return;
   }
+  actual.query = event.target.value;
+  actual.searchPage = 0;
+  $("#ruc-results").innerHTML = resultCards(true);
+});
+document.addEventListener("submit",(event)=>{
+  if (event.target.id!=="ruc-guide-form") return;
+  event.preventDefault();
+  refineSearch(event.target);
+});
+document.addEventListener("keydown",(event)=>{
   if (event.defaultPrevented || actualPage()!=="menu" || event.key!=="Escape" || !layer.hidden || picker.open || (!actual.stall && !actual.floorFocus)) return;
   returnToPlan();
 });
