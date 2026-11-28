@@ -864,7 +864,43 @@ img { display: block; width: 100%; }
 .ruc-guide-trace ol { margin: 5px 0 0; padding-left: 1.6em; }
 .ruc-guide-trace li { min-height: 1.45em; line-height: 1.55; }
 .live-catalog .ruc-guide-answer-text { margin: 0 0 14px; }
+
+/* Keep the live app on one viewport; scroll long page content inside its own pane. */
+html.live-catalog, html.live-catalog body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+.live-catalog { --ruc-shell-height: 102rem; }
+.live-catalog #stage:has(#dashboard:not([hidden])),
+.live-catalog #stage:has(.subpage:not([hidden])) {
+  height: calc(100vh - var(--ruc-shell-height));
+  height: calc(100dvh - var(--ruc-shell-height));
+  min-height: 0;
+  padding-bottom: 0;
+}
+.live-catalog .subpage:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.live-catalog .subpage:not([hidden]) .page-head { flex: none; }
+.live-catalog .subpage:not([hidden]) .page-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.live-catalog .ruc-nutrition-page { height: 100%; min-height: 0; }
+.live-catalog .ruc-nutrition-page .page-content { overflow: hidden; }
+.live-catalog .ruc-guide { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.live-catalog #ruc-guide-result { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 @media (max-width: 760px) {
+  .live-catalog { --ruc-shell-height: 100px; }
+  .live-catalog #stage:has(#dashboard:not([hidden])),
+  .live-catalog #stage:has(.subpage:not([hidden])) {
+    height: calc(100vh - 100px);
+    height: calc(100dvh - 100px);
+  }
+  .live-catalog .ruc-nutrition-page { height: 100%; }
   .live-catalog .main-nav { gap: 2px; font-size: clamp(10px,3.3vw,13px); }
   .live-catalog .main-nav a { padding-inline: 3px; }
 }
