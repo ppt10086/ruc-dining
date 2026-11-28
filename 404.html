@@ -564,13 +564,17 @@ img { display: block; width: 100%; }
 .ruc-plan-crop { position: absolute; inset: 53rem 0 66rem; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .ruc-plan-camera { position: relative; flex: none; width: min(100%,960rem); aspect-ratio: 1000 / 590; transform-origin: 0 0; }
 .ruc-building-scene { position: absolute; inset: 50% auto auto 14.5%; width: 84%; transform: translateY(-50%); }
-.ruc-section-art { display: block; width: 100%; height: auto; clip-path: var(--scheme-shape); }
-.ruc-deck { position: absolute; inset: 0; pointer-events: none; }
+.ruc-deck { position: absolute; inset: 0; z-index: calc(1 + var(--deck-order)); pointer-events: none; }
+.ruc-deck-art {
+  position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%;
+  object-fit: fill; clip-path: var(--floor-area); pointer-events: none; user-select: none;
+}
 .ruc-deck::before {
-  content: ""; position: absolute; inset: 0;
+  content: ""; position: absolute; z-index: 1; inset: 0; pointer-events: none;
   clip-path: var(--floor-area); mask: var(--scheme-art) center / contain no-repeat;
   background: #fff5f2; opacity: 0; transition: opacity .32s ease;
 }
+.ruc-ribbon, .ruc-plaque { z-index: 2; }
 .ruc-deck.is-muted::before { opacity: .54; }
 .ruc-deck.is-muted .ruc-plaque { opacity: .44; }
 .ruc-ribbon[aria-pressed="true"] { background: var(--deep); }
@@ -817,7 +821,6 @@ img { display: block; width: 100%; }
 .ruc-guide .search-line { gap: 9px; margin: 0; }
 .ruc-guide .search-line input { min-width: 0; }
 .ruc-guide .search-line .pill { flex: none; }
-#ruc-guide-result:not(:empty) { margin-top: 16px; }
 .ruc-guide-answer-text { white-space: pre-line; line-height: 1.65; }
 .ruc-guide-cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(135px,100%),1fr)); gap: 10px; }
 .ruc-guide-card { display: grid; align-content: start; color: var(--red); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--paper); text-decoration: none; }
@@ -892,7 +895,58 @@ html.live-catalog, html.live-catalog body { height: 100%; overflow: hidden; over
 .live-catalog .ruc-nutrition-page { height: 100%; min-height: 0; }
 .live-catalog .ruc-nutrition-page .page-content { overflow: hidden; }
 .live-catalog .ruc-guide { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.live-catalog #ruc-guide-result { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.live-catalog .subpage:has(.ruc-guide) { padding: 16rem clamp(14px,4vw,64rem); }
+.live-catalog .subpage:has(.ruc-guide) .page-head { margin-bottom: 8rem; padding-bottom: 7rem; }
+.live-catalog .subpage:has(.ruc-guide) .page-content { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.live-catalog .ruc-guide { max-width: 1040px; gap: 10px; }
+.ruc-guide-thread {
+  display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 20px;
+  overflow: auto; overscroll-behavior: contain; padding: 18px clamp(4px,2.4vw,26px) 22px;
+  scrollbar-width: thin; scrollbar-color: #d8b7b4 transparent;
+}
+.ruc-guide-welcome { display: grid; flex: 1; align-content: center; justify-items: center; gap: 8px; text-align: center; padding: 16px; }
+.ruc-guide-welcome-mark, .ruc-guide-avatar {
+  display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--red); color: #fffaf5; font-family: var(--serif); font-size: 17px; font-weight: 800;
+  box-shadow: 0 3px 9px #86203826;
+}
+.ruc-guide-welcome h2 { margin: 3px 0 0; color: var(--red); font: 750 clamp(19px,2vw,25px)/1.3 var(--serif); }
+.ruc-guide-welcome p { margin: 0; color: var(--muted); }
+.ruc-guide-prompts { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.ruc-guide-prompt { min-height: 34px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 18px; background: #fffaf7; color: #70484a; cursor: pointer; transition: color .2s,border-color .2s,background .2s; }
+.ruc-guide-prompt:hover, .ruc-guide-prompt:focus-visible { border-color: var(--red); background: #f8ece9; color: var(--red); }
+.ruc-guide-turn { display: flex; flex: none; width: min(100%,880px); flex-direction: column; gap: 12px; margin-inline: auto; }
+.ruc-guide-user { display: flex; justify-content: flex-end; }
+.ruc-guide-user > span { max-width: min(80%,720px); padding: 10px 15px; border: 1px solid #ecd9d3; border-radius: 17px 17px 4px 17px; background: #f4e9e5; color: #442d2d; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ruc-guide-assistant { display: grid; min-width: 0; grid-template-columns: 32px minmax(0,1fr); align-items: start; gap: 9px; }
+.ruc-guide-name { margin: 1px 0 5px; color: var(--red); font-size: 12px; font-weight: 750; }
+.ruc-guide-assistant-body { min-width: 0; }
+.ruc-guide-answer { min-width: 0; padding: 13px 15px; border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; background: #fffaf7; box-shadow: 0 3px 12px #6524380b; }
+.ruc-guide-answer:empty { display: none; }
+.ruc-guide-answer .ruc-guide-trace { margin-bottom: 11px; }
+.ruc-guide-answer .ruc-guide-answer-text { margin: 0 0 12px; }
+.ruc-guide-answer .ruc-guide-cards { grid-template-columns: repeat(auto-fit,minmax(min(170px,100%),1fr)); }
+.ruc-guide-answer .ruc-guide-card img { max-height: 34svh; }
+.ruc-guide-composer { flex: none; width: min(100%,880px); min-height: 54px; gap: 10px; margin: 0 auto; padding: 7px 10px 7px 15px; border-radius: 18px; background: #fffdfb; box-shadow: 0 4px 22px #63203116; }
+.ruc-guide-composer .icon { flex: none; color: var(--muted); }
+.ruc-guide-composer input { flex: 1; min-width: 0; height: 38px; border: 0; outline: 0; box-shadow: none; background: transparent; }
+.ruc-guide-composer input:focus { border: 0; outline: 0; box-shadow: none; }
+.ruc-guide-composer .pill { flex: none; min-height: 36px; padding-inline: 15px; }
+@media (max-width: 760px) {
+  .live-catalog .subpage:has(.ruc-guide) { padding: 10px; }
+  .live-catalog .subpage:has(.ruc-guide) .page-head { margin-bottom: 3px; padding-bottom: 6px; }
+  .live-catalog .subpage:has(.ruc-guide) .page-head h1 { font-size: 23px; }
+  .ruc-guide { gap: 7px; }
+  .ruc-guide-thread { padding: 12px 3px 16px; gap: 16px; }
+  .ruc-guide-welcome { padding: 10px 4px; }
+  .ruc-guide-welcome p { max-width: 34ch; font-size: 13px; }
+  .ruc-guide-turn { gap: 9px; }
+  .ruc-guide-answer { padding: 11px; }
+  .ruc-guide-answer .ruc-guide-cards { grid-template-columns: repeat(auto-fit,minmax(min(135px,100%),1fr)); gap: 7px; }
+  .ruc-guide-composer { min-height: 48px; padding: 5px 6px 5px 11px; gap: 7px; }
+  .ruc-guide-composer input { height: 34px; font-size: 14px; }
+  .ruc-guide-composer .pill { min-height: 34px; padding-inline: 11px; }
+}
 @media (max-width: 760px) {
   .live-catalog { --ruc-shell-height: 100px; }
   .live-catalog #stage:has(#dashboard:not([hidden])),
@@ -2382,6 +2436,22 @@ const planCamera = $("#ruc-plan-camera");
 const planCrop = $("#ruc-plan-crop");
 const planDuration = .56;
 const planEase = "power2.inOut";
+let floorBreathTweens = [];
+
+function setFloorBreathing(active) {
+  if (!active || reduced.matches) {
+    for (const tween of floorBreathTweens) tween.kill();
+    floorBreathTweens = [];
+    gsap.set($$(".ruc-deck",planCamera),{y:0});
+    return;
+  }
+  if (floorBreathTweens.length) return;
+  const lift = [-2.4,2.1,-1.8,2.3];
+  floorBreathTweens = $$(".ruc-deck",planCamera).map((deck,index)=>gsap.to(deck,{
+    y:lift[index%lift.length],duration:4.6+index*.47,delay:index*.39,
+    ease:"sine.inOut",repeat:-1,yoyo:true,paused:false,
+  }));
+}
 
 // Bounds, terrace edges and signs are measured in the original artwork's pixels.
 const FLOOR_ART = {
@@ -2433,6 +2503,7 @@ function artPolygon(points,width,height) {
 
 function floorPlan(levels, floorStalls, selectedFloor, selectedStall) {
   if (planCamera.dataset.canteen!==actual.canteen) {
+    setFloorBreathing(false);
     const {image,width,height,edges,ribbons,signs,outline} = FLOOR_ART[actual.canteen];
     const src = uiAsset(image);
     const shape = artPolygon(outline,width,height);
@@ -2459,11 +2530,13 @@ function floorPlan(levels, floorStalls, selectedFloor, selectedStall) {
             stall.placeholder?stall.tag:miniStall(stall),angle,stall.placeholder);
         });
       }).join("");
-      return '<div class="ruc-deck" data-deck="'+asText(floor)+'" style="--floor-area:'+area+'">'+ribbon+counters+'</div>';
+      const artwork = '<img class="ruc-deck-art" src="'+src+'" alt="" aria-hidden="true" draggable="false">';
+      return '<div class="ruc-deck" data-deck="'+asText(floor)+'" style="--floor-area:'+area+';--deck-order:'+index+'">'+artwork+ribbon+counters+'</div>';
     }).join("");
     planCamera.innerHTML = '<div class="ruc-building-scene" style="aspect-ratio:'+width+' / '+height+';--scheme-shape:'+shape+
-      ';--scheme-art:url('+src+')"><img class="ruc-section-art" src="'+src+'" alt="" fetchpriority="high" draggable="false">'+floors+'</div>';
+      ';--scheme-art:url('+src+')">'+floors+'</div>';
     planCamera.dataset.canteen=actual.canteen;
+    setFloorBreathing(true);
   }
   for (const deck of $$(".ruc-deck",planCamera)) {
     deck.classList.toggle("is-muted",Boolean(selectedFloor && selectedFloor!==deck.dataset.deck));
@@ -2547,7 +2620,8 @@ const actualPage = () => {
 const publicPhotos = !document.querySelector('script[src="menu_data.js"]');
 const intentEndpoint = publicPhotos ? RUC_AI_ENDPOINT : "/api/search-intent";
 let intentRequest;
-let guideResult = "";
+let guideMessages = [];
+let guideMessageId = 0;
 let recentPicks = [];
 try {
   const saved = JSON.parse(sessionStorage.getItem("ruc-recent-picks") || "[]");
@@ -2949,6 +3023,25 @@ function guideLoading() {
     '<span>正在检索本周菜单…</span></div>';
 }
 
+function guideConversation() {
+  if (!guideMessages.length) {
+    const prompts = ["随机帮我挑一道", "想吃清淡一点", "午餐 10 元以内"];
+    return '<div class="ruc-guide-welcome"><span class="ruc-guide-welcome-mark" aria-hidden="true">人</span>' +
+      '<h2>今天想吃点什么？</h2><p>我是人大食堂向导，可以按口味、预算和餐次帮你找菜。</p>' +
+      '<div class="ruc-guide-prompts">' + prompts.map(query=>'<button type="button" class="ruc-guide-prompt" data-guide-query="'+asText(query)+'">'+asText(query)+'</button>').join("") +
+      '</div></div>';
+  }
+  return guideMessages.map(message=>'<article class="ruc-guide-turn"><div class="ruc-guide-user"><span>'+asText(message.query)+'</span></div>' +
+    '<div class="ruc-guide-assistant"><span class="ruc-guide-avatar" aria-hidden="true">人</span><div class="ruc-guide-assistant-body">' +
+    '<div class="ruc-guide-name">人大食堂向导</div><div class="ruc-guide-answer" id="ruc-guide-answer-'+message.id+'"' +
+    (message.pending?' aria-busy="true"':'')+'>'+(message.pending?guideLoading():message.answer)+'</div></div></div></article>').join("");
+}
+
+function scrollGuideToLatest(behavior = reduced.matches ? "instant" : "smooth") {
+  const thread = $("#ruc-guide-thread");
+  if (thread) thread.scrollTo({top:thread.scrollHeight,behavior});
+}
+
 function cueGuideText(timeline,node,at) {
   const chars = Array.from(node.textContent);
   const progress = {index:0};
@@ -2970,6 +3063,7 @@ function revealGuideResult(output,html) {
     output.innerHTML = html;
     if (reduced.matches) {
       output.removeAttribute("aria-busy");
+      scrollGuideToLatest("instant");
       return;
     }
     const trace = $(".ruc-guide-trace",output);
@@ -2981,6 +3075,7 @@ function revealGuideResult(output,html) {
       if (answer) answer.style.minHeight = "";
       if(elements.length) gsap.set(elements,{clearProps:"transform,opacity,visibility"});
       output.removeAttribute("aria-busy");
+      scrollGuideToLatest();
     }});
     guideMotion = timeline;
     if (!elements.length) {
@@ -3033,25 +3128,34 @@ function revealGuideResult(output,html) {
 reduced.addEventListener("change",()=>{ if (reduced.matches) guideMotion?.progress(1); });
 
 function actualGuide() {
-  return '<section class="ruc-guide"><form id="ruc-guide-form" class="search-line">' + icon("search") +
+  return '<section class="ruc-guide"><div id="ruc-guide-thread" class="ruc-guide-thread" role="log" aria-live="polite" aria-relevant="additions">' + guideConversation() + '</div>' +
+    '<form id="ruc-guide-form" class="search-line ruc-guide-composer">' + icon("search") +
     '<input type="search" id="ruc-query" maxlength="120" required autocomplete="off" aria-label="智能检索" ' +
-    'placeholder="我是人大食堂向导，想吃点什么？" value="' + asText(actual.smartQuery) + '">' +
-    '<button type="submit" class="pill filled"' + (intentRequest ? " disabled" : "") + '>AI 检索</button></form>' +
-    '<div id="ruc-guide-result" aria-live="polite">' + (intentRequest ? guideLoading() : guideResult) + '</div></section>';
+    'placeholder="继续问食堂向导…" value="' + asText(actual.smartQuery) + '">' +
+    '<button type="submit" class="pill filled"' + (intentRequest ? " disabled" : "") + '>AI 检索</button></form></section>';
 }
 
 async function refineSearch(form) {
-  const query = actual.smartQuery.trim();
+  const query = (form.querySelector("input")?.value || actual.smartQuery).trim();
   if (!query || !intentEndpoint || intentRequest) return;
-  const output = $("#ruc-guide-result");
+  const message = {id:++guideMessageId,query,pending:true,answer:""};
+  guideMessages.push(message);
+  if (guideMessages.length>20) guideMessages.shift();
+  actual.smartQuery = "";
+  form.querySelector("input").value = "";
+  const thread = $("#ruc-guide-thread");
+  if (thread) {
+    thread.innerHTML = guideConversation();
+    scrollGuideToLatest();
+  }
+  const output = $("#ruc-guide-answer-"+message.id);
   const button = form.querySelector("button");
   const request = new AbortController();
   intentRequest = request;
   const timeout = setTimeout(()=>request.abort(),33000);
   button.disabled = true;
   guideMotion?.kill();
-  output.removeAttribute("aria-busy");
-  output.innerHTML = guideLoading();
+  output.setAttribute("aria-busy","true");
   try {
     const response = await fetch(intentEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({q:query,recent:recentPicks}),signal:request.signal});
@@ -3065,18 +3169,19 @@ async function refineSearch(form) {
         recentPicks = [...recentPicks.filter(key=>key!==result.randomKey),result.randomKey].slice(-8);
         try { sessionStorage.setItem("ruc-recent-picks",JSON.stringify(recentPicks)); } catch {}
       }
-      guideResult = renderGuideAnswer(result);
+      message.answer = renderGuideAnswer(result);
     }
-    else guideResult = '<p>' + (errors[result.reason] || "食堂向导暂时无法连接，请稍后再试。") + '</p>';
+    else message.answer = '<p>' + (errors[result.reason] || "食堂向导暂时无法连接，请稍后再试。") + '</p>';
   } catch {
-    guideResult = '<p>食堂向导暂时无法连接，请稍后再试。</p>';
+    message.answer = '<p>食堂向导暂时无法连接，请稍后再试。</p>';
   } finally {
     clearTimeout(timeout);
     intentRequest = null;
+    message.pending = false;
     button.disabled = false;
-    if (actualPage()==="guide" && $("#ruc-guide-result")) {
+    if (actualPage()==="guide" && $("#ruc-guide-answer-"+message.id)) {
       $("#ruc-guide-form button").disabled = false;
-      revealGuideResult($("#ruc-guide-result"),guideResult);
+      revealGuideResult($("#ruc-guide-answer-"+message.id),message.answer);
     }
   }
 }
@@ -3248,6 +3353,7 @@ function renderActual({animation=false}={}) {
   workspace.innerHTML = "";
   dashboard.hidden = route!=="menu";
   subpage.hidden = route==="menu";
+  setFloorBreathing(route==="menu");
   subpage.classList.toggle("ruc-nutrition-page",route==="nutrition");
   const linkedDish = applyGuideLink();
   if (route==="menu") {
@@ -3373,6 +3479,7 @@ window.addEventListener("resize",()=>{
   if (actualPage()==="menu" && (actual.stall || actual.floorFocus)) movePlan(actual.stall,false);
 });
 reduced.addEventListener("change",()=>{
+  setFloorBreathing(actualPage()==="menu");
   if (actualPage()!=="menu") return;
   presentActualPanel(Boolean(actualStall()),false);
   movePlan(actual.stall,false);
@@ -3401,6 +3508,16 @@ document.addEventListener("input",(event)=>{
   actual.query = event.target.value;
   actual.searchPage = 0;
   $("#ruc-results").innerHTML = resultCards(true);
+});
+document.addEventListener("click",(event)=>{
+  const prompt = event.target.closest("[data-guide-query]");
+  if (!prompt || actualPage()!=="guide") return;
+  const input = $("#ruc-query");
+  const form = $("#ruc-guide-form");
+  if (!input || !form || intentRequest) return;
+  input.value = prompt.dataset.guideQuery;
+  actual.smartQuery = input.value;
+  form.requestSubmit();
 });
 document.addEventListener("submit",(event)=>{
   if (event.target.id!=="ruc-guide-form") return;
