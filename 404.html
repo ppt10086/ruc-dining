@@ -2537,6 +2537,7 @@ navIndicator.setAttribute("aria-hidden","true");
 liveNav.append(myNav,navIndicator);
 let pageTween;
 let exitingRoute = false;
+let routeRevision = 0;
 
 function updateLiveNav(route, animate=false) {
   const links = $$("a",liveNav);
@@ -3075,17 +3076,20 @@ function renderActual({animation=false}={}) {
       pageTween?.kill();
       stage.inert = true;
       exitingRoute = true;
-      pageTween = gsap.timeline({onComplete:()=>{
-        stage.inert = false;
-        if (!layer.hidden) $(".exit",layer)?.focus({preventScroll:true});
-        gsap.set(stage,{clearProps:"transform,opacity"});
+      const revision = ++routeRevision;
+      pageTween = gsap.to(stage,{y:24,opacity:0,duration:.19,ease:"power2.in",onComplete:()=>{
+        renderActual();
+        exitingRoute = false;
+        // Let the new route lay out and paint before its animation clock starts.
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          if (revision!==routeRevision) return;
+          pageTween = gsap.to(stage,{y:0,opacity:1,duration:reduced.matches?0:.27,ease:"power3.out",onComplete:()=>{
+            stage.inert = false;
+            if (!layer.hidden) $(".exit",layer)?.focus({preventScroll:true});
+            gsap.set(stage,{clearProps:"transform,opacity"});
+          }});
+        }));
       }});
-      pageTween.to(stage,{y:24,opacity:0,duration:.19,ease:"power2.in"})
-        .call(()=>{
-          exitingRoute = false;
-          renderActual();
-        })
-        .fromTo(stage,{y:24,opacity:0},{y:0,opacity:1,duration:.27,ease:"power3.out",immediateRender:false});
     }
     return true;
   }
@@ -3094,6 +3098,7 @@ function renderActual({animation=false}={}) {
   badge.hidden=Boolean(route);
   myNav.hidden = !route;
   if (!route) {
+    routeRevision++;
     pageTween?.kill();
     exitingRoute = false;
     stage.inert = false;
@@ -3148,7 +3153,7 @@ function renderActual({animation=false}={}) {
     presentActualPanel(false,false);
     subpage.innerHTML=actualSubpage(route);
   }
-  if (!pageTween?.isActive()) updateLiveNav(route,animation);
+  if (!exitingRoute && !pageTween?.isActive()) updateLiveNav(route,animation);
   return true;
 }
 
